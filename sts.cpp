@@ -1,14 +1,3 @@
-#include <sys/stat.h>
-#include <sys/select.h>
-#include <fcntl.h>
-#include <libgen.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -17,11 +6,10 @@
 #include "tty_state.hpp"
 #include "pty_fork.hpp"
 
-int main(int const argc, char ** const argv)
+int main(int const, char ** const)
 try
 {
   sts::tty_state tty;
-
   sts::pseudo_term pt{ tty };
   pt([]
   {
@@ -32,7 +20,6 @@ try
     execlp(shell, shell, nullptr);
     throw std::runtime_error{ "shell failed to run" };
   });
-  int const master_fd{ pt.get_master() };
 
   /* Parent: relay data between terminal and pty master */
   auto const log_fd = open("typescript",
@@ -48,6 +35,7 @@ try
   std::array<char, 256> buf{};
   ssize_t num_read{};
   fd_set in_fds{};
+  int const master_fd{ pt.get_master() };
   while(true)
   {
     FD_ZERO(&in_fds);
