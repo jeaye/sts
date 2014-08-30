@@ -51,7 +51,7 @@ try
       if(num_read <= 0)
       { break; }
 
-      if (write(master_fd, buf.data(), num_read) != num_read)
+      if(write(master_fd, buf.data(), num_read) != num_read)
       { throw std::runtime_error{ "partial/failed write (master)" }; }
     }
 

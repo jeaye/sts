@@ -28,6 +28,7 @@ namespace sts
       {
         dtor_(data_);
         data_ = std::move(r.data_);
+        r.data_ = {};
         return *this;
       }
       resource& operator =(T &&t)
