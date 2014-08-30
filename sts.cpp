@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <string.h>
 
-#include "pty_fork.h"           /* Declaration of ptyFork() */
 #include "tty_functions.h"      /* Declaration of ttySetRaw() */
 
 #include <iostream>
