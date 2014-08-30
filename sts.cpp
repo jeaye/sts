@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "tty_functions.h"      /* Declaration of ttySetRaw() */
+#include "tty_functions.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -18,12 +18,6 @@
 
 #include "tty_state.hpp"
 #include "pty_fork.hpp"
-
-void errExit(char const * const s)
-{ printf("error: %s\n", s); exit(1); }
-
-void fatal(char const * const s)
-{ errExit(s); }
 
 int main(int const argc, char ** const argv)
 try
@@ -43,11 +37,11 @@ try
   int const master_fd{ pt.get_master() };
 
   /* Parent: relay data between terminal and pty master */
-  auto const script_fd = open((argc > 1) ? argv[1] : "typescript",
+  auto const log_fd = open("typescript",
       O_WRONLY | O_CREAT | O_TRUNC,
       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-  if(script_fd == -1)
-  { errExit("open typescript"); }
+  if(log_fd == -1)
+  { throw std::runtime_error{ "failed to open log file" }; }
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pseudoterminal master untouched */
@@ -63,16 +57,16 @@ try
     FD_SET(master_fd, &in_fds);
 
     if(select(master_fd + 1, &in_fds, NULL, NULL, NULL) == -1)
-    { errExit("select"); }
+    { throw std::runtime_error{ "failed to select" }; }
 
     if(FD_ISSET(STDIN_FILENO, &in_fds)) /* stdin --> pty */
     {
       num_read = read(STDIN_FILENO, buf.data(), buf.size());
       if(num_read <= 0)
-      { exit(EXIT_SUCCESS); }
+      { break; }
 
       if (write(master_fd, buf.data(), num_read) != num_read)
-      { fatal("partial/failed write (master_fd)"); }
+      { throw std::runtime_error{ "partial/failed write" }; }
     }
 
     if(FD_ISSET(master_fd, &in_fds)) /* pty --> stdout+file */
@@ -82,9 +76,9 @@ try
       { break; }
 
       if(write(STDOUT_FILENO, buf.data(), num_read) != num_read)
-      { fatal("partial/failed write (STDOUT_FILENO)"); }
-      if(write(script_fd, buf.data(), num_read) != num_read)
-      { fatal("partial/failed write (script_fd)"); }
+      { throw std::runtime_error{ "partial/failed write (stdout)" }; }
+      if(write(log_fd, buf.data(), num_read) != num_read)
+      { throw std::runtime_error{ "partial/failed write (log)" }; }
     }
   }
 }
