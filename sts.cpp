@@ -4,7 +4,7 @@
 #include <array>
 
 #include "tty_state.hpp"
-#include "pty_fork.hpp"
+#include "pseudo_term.hpp"
 
 int main(int const, char ** const)
 try
@@ -52,7 +52,7 @@ try
       { break; }
 
       if (write(master_fd, buf.data(), num_read) != num_read)
-      { throw std::runtime_error{ "partial/failed write" }; }
+      { throw std::runtime_error{ "partial/failed write (master)" }; }
     }
 
     if(FD_ISSET(master_fd, &in_fds)) /* pty --> stdout + log */
