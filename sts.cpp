@@ -9,8 +9,6 @@
 #include <errno.h>
 #include <string.h>
 
-#include "tty_functions.h"
-
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -45,7 +43,7 @@ try
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pseudoterminal master untouched */
-  ttySetRaw(STDIN_FILENO, &tty.term);
+  tty.enter_raw_mode();
 
   std::array<char, 256> buf{};
   ssize_t num_read{};
@@ -56,7 +54,7 @@ try
     FD_SET(STDIN_FILENO, &in_fds);
     FD_SET(master_fd, &in_fds);
 
-    if(select(master_fd + 1, &in_fds, NULL, NULL, NULL) == -1)
+    if(select(master_fd + 1, &in_fds, nullptr, nullptr, nullptr) == -1)
     { throw std::runtime_error{ "failed to select" }; }
 
     if(FD_ISSET(STDIN_FILENO, &in_fds)) /* stdin --> pty */
@@ -69,7 +67,7 @@ try
       { throw std::runtime_error{ "partial/failed write" }; }
     }
 
-    if(FD_ISSET(master_fd, &in_fds)) /* pty --> stdout+file */
+    if(FD_ISSET(master_fd, &in_fds)) /* pty --> stdout + log */
     {
       num_read = read(master_fd, buf.data(), buf.size());
       if(num_read <= 0)
@@ -83,10 +81,6 @@ try
   }
 }
 catch(std::exception const &e)
-{
-  std::cout << "exception: " << e.what() << std::endl;
-}
+{ std::cout << "exception: " << e.what() << std::endl; }
 catch(...)
-{
-  std::cout << "unknown error occurred" << std::endl;
-}
+{ std::cout << "unknown error occurred" << std::endl; }

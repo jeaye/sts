@@ -27,6 +27,27 @@ namespace sts
       { throw error{ "failed to reset terminal" }; }
     }
 
+    void enter_raw_mode()
+    {
+      term.c_lflag &= ~(ICANON | ISIG | IEXTEN | ECHO);
+
+      /* Noncanonical mode, disable signals, extended
+         input processing, and echoing */
+      term.c_iflag &= ~(BRKINT | ICRNL | IGNBRK | IGNCR | INLCR |
+          INPCK | ISTRIP | IXON | PARMRK);
+
+      /* Disable special handling of CR, NL, and BREAK.
+         No 8th-bit stripping or parity error handling.
+         Disable START/STOP output flow control. */
+      term.c_oflag &= ~OPOST; /* Disable all output processing */
+
+      term.c_cc[VMIN] = 1; /* Character-at-a-time input */
+      term.c_cc[VTIME] = 0; /* with blocking */
+
+      if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1)
+      { throw error{ "failed to enter raw mode" }; }
+    }
+
     termios term;
     winsize size;
   };
