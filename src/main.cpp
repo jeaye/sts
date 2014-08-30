@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <array>
+#include <fstream>
 
 #include "tty_state.hpp"
 #include "pseudo_term.hpp"
@@ -36,6 +37,7 @@ try
   ssize_t num_read{};
   fd_set in_fds{};
   int const master_fd{ pt.get_master() };
+  std::ofstream ofs{ "log" };
   while(true)
   {
     FD_ZERO(&in_fds);
@@ -50,6 +52,16 @@ try
       num_read = read(STDIN_FILENO, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
+      for(size_t i{}; i < num_read; ++i)
+      {
+        if(buf[i] == 25)
+        { ofs << "scroll up" << " "; }
+        else if(buf[i] == 5)
+        { ofs << "scroll down" << " "; }
+        else
+        { ofs << static_cast<int>(buf[i]) << " "; }
+      }
+      ofs << std::endl;
 
       if(write(master_fd, buf.data(), num_read) != num_read)
       { throw std::runtime_error{ "partial/failed write (master)" }; }
