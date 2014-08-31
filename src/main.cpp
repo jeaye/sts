@@ -6,6 +6,7 @@
 
 #include "tty_state.hpp"
 #include "pseudo_term.hpp"
+#include "backlog.hpp"
 
 int main(int const, char ** const)
 try
@@ -17,27 +18,30 @@ try
     char const *shell{ getenv("SHELL") };
     if(!shell || *shell == '\0')
     { shell = "/bin/sh"; }
+    //std::string const cmd{ std::string{"-c \"printf '\\x1B[2J\\x1B[H'; "} + shell + "\"" };
 
     execlp(shell, shell, nullptr);
     throw std::runtime_error{ "shell failed to run" };
   });
 
   /* Parent: relay data between terminal and pty master */
-  auto const log_fd = open("typescript",
-      O_WRONLY | O_CREAT | O_TRUNC,
-      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-  if(log_fd == -1)
-  { throw std::runtime_error{ "failed to open log file" }; }
+  sts::backlog backlog{ tty, ".log" };
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pseudoterminal master untouched */
   tty.enter_raw_mode();
+
+  /* Clear the screen first. */
+  std::string const clear{ "\x1B[H\x1B[2J" };
+  if(write(STDOUT_FILENO, clear.c_str(), clear.size()) != clear.size())
+  { throw std::runtime_error{ "unable to clear screen" }; }
 
   std::array<char, 256> buf{};
   ssize_t num_read{};
   fd_set in_fds{};
   int const master_fd{ pt.get_master() };
   std::ofstream ofs{ "log" };
+
   while(true)
   {
     FD_ZERO(&in_fds);
@@ -55,7 +59,6 @@ try
       bool done{};
       for(size_t i{}; i < num_read; ++i)
       {
-        /* TODO: check num_read */
         if(buf[i] == 25)
         {
           ofs << "(" << num_read << ") " << "scroll up" << " ";
@@ -69,15 +72,10 @@ try
         else if(buf[i] == 11)
         {
           ofs << "(" << num_read << ") " << "clearing" << " ";
-          //std::string const clear{ "printf '\\x1B[2J\\x1B[H'\n" };
-          //if(write(master_fd, clear.c_str(), clear.size()) != clear.size())
-          //{ throw std::runtime_error{ "unable to clear screen" }; }
-
-          std::string const clear_out{ "\x1B[2J\x1B[H" };
-          if(write(STDOUT_FILENO, clear_out.c_str(), clear_out.size()) != clear_out.size())
+          std::string const clear{ "printf '\\x1B[H\\x1B[2J'\n" };
+          if(write(master_fd, clear.c_str(), clear.size()) != clear.size())
           { throw std::runtime_error{ "unable to clear screen" }; }
-          num_read = 1;
-          buf[0] = '\n';
+          done = true;
         }
         else
         { ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " "; }
@@ -98,8 +96,7 @@ try
 
       if(write(STDOUT_FILENO, buf.data(), num_read) != num_read)
       { throw std::runtime_error{ "partial/failed write (stdout)" }; }
-      if(write(log_fd, buf.data(), num_read) != num_read)
-      { throw std::runtime_error{ "partial/failed write (log)" }; }
+      backlog.write(std::begin(buf), std::begin(buf) + num_read);
     }
   }
 }

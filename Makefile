@@ -1,7 +1,11 @@
 .SILENT:
 
 all: setup
-	g++ -std=c++11 -Iinclude src/main.cpp -o bin/sts
+	rm -f bin/sts
+	g++ -std=c++11 -ggdb -Iinclude src/main.cpp -o bin/sts
 
 setup:
 	mkdir -p bin
+
+run:
+	st -e ./bin/sts
