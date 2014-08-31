@@ -52,16 +52,39 @@ try
       num_read = read(STDIN_FILENO, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
+      bool done{};
       for(size_t i{}; i < num_read; ++i)
       {
+        /* TODO: check num_read */
         if(buf[i] == 25)
-        { ofs << "scroll up" << " "; }
+        {
+          ofs << "(" << num_read << ") " << "scroll up" << " ";
+          done = true;
+        }
         else if(buf[i] == 5)
-        { ofs << "scroll down" << " "; }
+        {
+          ofs << "(" << num_read << ") " << "scroll down" << " ";
+          done = true;
+        }
+        else if(buf[i] == 11)
+        {
+          ofs << "(" << num_read << ") " << "clearing" << " ";
+          //std::string const clear{ "printf '\\x1B[2J\\x1B[H'\n" };
+          //if(write(master_fd, clear.c_str(), clear.size()) != clear.size())
+          //{ throw std::runtime_error{ "unable to clear screen" }; }
+
+          std::string const clear_out{ "\x1B[2J\x1B[H" };
+          if(write(STDOUT_FILENO, clear_out.c_str(), clear_out.size()) != clear_out.size())
+          { throw std::runtime_error{ "unable to clear screen" }; }
+          num_read = 1;
+          buf[0] = '\n';
+        }
         else
-        { ofs << static_cast<int>(buf[i]) << " "; }
+        { ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " "; }
       }
       ofs << std::endl;
+      if(done)
+      { continue; }
 
       if(write(master_fd, buf.data(), num_read) != num_read)
       { throw std::runtime_error{ "partial/failed write (master)" }; }
