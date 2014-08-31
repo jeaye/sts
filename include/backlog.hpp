@@ -29,6 +29,8 @@ namespace sts
         auto const size(std::distance(begin, end));
         if(::write(file_.get(), &*begin, size) != size)
         { throw std::runtime_error{ "partial/failed write (log)" }; }
+        if(::write(STDOUT_FILENO, &*begin, size) != size)
+        { throw std::runtime_error{ "partial/failed write (stdout)" }; }
       }
 
     private:

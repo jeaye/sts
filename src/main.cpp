@@ -3,6 +3,7 @@
 #include <string>
 #include <array>
 #include <fstream>
+#include <iterator>
 
 #include "tty_state.hpp"
 #include "pseudo_term.hpp"
@@ -25,7 +26,7 @@ try
   });
 
   /* Parent: relay data between terminal and pty master */
-  sts::backlog backlog{ tty, ".log" };
+  sts::backlog backlog{ tty, ".out_log" };
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pseudoterminal master untouched */
@@ -40,7 +41,7 @@ try
   ssize_t num_read{};
   fd_set in_fds{};
   int const master_fd{ pt.get_master() };
-  std::ofstream ofs{ "log" };
+  std::ofstream ofs{ ".in_log" };
 
   while(true)
   {
@@ -93,9 +94,6 @@ try
       num_read = read(master_fd, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
-
-      if(write(STDOUT_FILENO, buf.data(), num_read) != num_read)
-      { throw std::runtime_error{ "partial/failed write (stdout)" }; }
       backlog.write(std::begin(buf), std::begin(buf) + num_read);
     }
   }
