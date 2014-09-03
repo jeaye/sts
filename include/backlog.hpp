@@ -35,19 +35,19 @@ namespace sts
       {
         mark_lines(begin, end);
 
+        clear();
+
         auto const size(std::distance(begin, end));
         if(::write(file_.get(), &*begin, size) != size)
         { throw std::runtime_error{ "partial/failed write (log)" }; }
         std::copy(begin, end, std::back_inserter(buf_));
 
-        std::string const clear{ "\x1B[H\x1B[2J" };
-        ssize_t const clear_size(clear.size());
-        if(::write(STDOUT_FILENO, clear.c_str(), clear.size()) != clear_size)
-        { throw std::runtime_error{ "unable to clear screen" }; }
-
-        for(size_t i{}; i < line_markers_.size(); ++i)
+        size_t const count{ tty_.size.ws_row };
+        for(size_t i{}; i < std::min(line_markers_.size(), count); ++i)
         {
-          ssize_t const size((line_markers_[i].second - line_markers_[i].first) + 1);
+          ssize_t size((line_markers_[i].second - line_markers_[i].first) + 1);
+          if(i == std::min(line_markers_.size() - 1, count - 1))
+          { --size; }
           if(::write(STDOUT_FILENO, &buf_[line_markers_[i].first], size) != size)
           { throw std::runtime_error{ "partial/failed write (stdout)" }; }
         }
@@ -58,6 +58,14 @@ namespace sts
 
       void scroll_down()
       { }
+
+      void clear()
+      {
+        static std::string const clear{ "\x1B[H\x1B[2J" };
+        static ssize_t const clear_size(clear.size());
+        if(::write(STDOUT_FILENO, clear.c_str(), clear.size()) != clear_size)
+        { throw std::runtime_error{ "unable to clear screen" }; }
+      }
 
     private:
       template <typename It>

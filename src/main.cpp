@@ -27,15 +27,11 @@ try
 
   /* Parent: relay data between terminal and pty master */
   sts::backlog backlog{ tty, ".out_log" };
+  backlog.clear();
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pseudoterminal master untouched */
   tty.enter_raw_mode();
-
-  /* Clear the screen first. */
-  std::string const clear{ "\x1B[H\x1B[2J" };
-  if(write(STDOUT_FILENO, clear.c_str(), clear.size()) != clear.size())
-  { throw std::runtime_error{ "unable to clear screen" }; }
 
   std::array<char, 256> buf{};
   ssize_t num_read{};
@@ -73,9 +69,7 @@ try
         else if(buf[i] == 11)
         {
           ofs << "(" << num_read << ") " << "clearing" << " ";
-          std::string const clear{ "printf '\\x1B[H\\x1B[2J'\n" };
-          if(write(master_fd, clear.c_str(), clear.size()) != clear.size())
-          { throw std::runtime_error{ "unable to clear screen" }; }
+          backlog.clear();
           done = true;
         }
         else
