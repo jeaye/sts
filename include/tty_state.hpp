@@ -23,8 +23,9 @@ namespace sts
     ~tty_state()
     {
       /* XXX: May throw in dtor; should terminate program. */
-      if(tcsetattr(STDIN_FILENO, TCSANOW, &term) == -1)
-      { throw error{ "failed to reset terminal" }; }
+      tcsetattr(STDIN_FILENO, TCSANOW, &term);
+      //if(tcsetattr(STDIN_FILENO, TCSANOW, &term) == -1)
+      //{ throw error{ "failed to reset terminal" }; }
     }
 
     void enter_raw_mode()

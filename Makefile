@@ -7,5 +7,8 @@ all: setup
 setup:
 	mkdir -p bin
 
+shell:
+	st
+
 run:
 	st -e ./bin/sts
