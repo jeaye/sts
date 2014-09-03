@@ -7,34 +7,34 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 
-#include "tty_state.hpp"
+#include "tty.hpp"
 #include "resource.hpp"
 
 namespace sts
 {
-  class pseudo_term
+  class pty
   {
     public:
       struct error : std::runtime_error
       { using std::runtime_error::runtime_error; };
 
-      pseudo_term() = delete;
-      pseudo_term(tty_state const &state)
+      pty() = delete;
+      pty(tty const &state)
         : tty_{ state }, master_{ posix_openpt(O_RDWR | O_NOCTTY), &close }
       {
         if(master_.get() == -1)
-        { throw error{ "failed to open pseudo terminal" }; }
+        { throw error{ "failed to open pty" }; }
         auto const master(master_.get());
 
         if(grantpt(master) == -1)
-        { throw error{ "failed to grant pseudo terminal access" }; }
+        { throw error{ "failed to grant pty access" }; }
 
         if(unlockpt(master) == -1)
-        { throw error{ "failed to unlock pseudo terminal" }; }
+        { throw error{ "failed to unlock pty" }; }
 
         char const * const name{ ptsname(master) };
         if(!name)
-        { throw error{ "failed to acquire pseudo terminal name" }; }
+        { throw error{ "failed to acquire pty name" }; }
         name_ = name;
       }
 
@@ -82,7 +82,7 @@ namespace sts
       { return master_.get(); }
 
     private:
-      tty_state const &tty_;
+      tty const &tty_;
       resource<int> master_;
       resource<int> slave_{ &close };
       std::string name_;

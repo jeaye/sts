@@ -5,23 +5,22 @@
 #include <fstream>
 #include <iterator>
 
-#include "tty_state.hpp"
-#include "pseudo_term.hpp"
+#include "tty.hpp"
+#include "pty.hpp"
 #include "backlog.hpp"
 
 int main(int const, char ** const)
 try
 {
-  sts::tty_state tty;
-  sts::pseudo_term pt{ tty };
+  sts::tty tty;
+  sts::pty pt{ tty };
   pt([]
   {
-    char const *shell{ getenv("SHELL") };
+    char const *shell{ ::getenv("SHELL") };
     if(!shell || *shell == '\0')
     { shell = "/bin/sh"; }
-    //std::string const cmd{ std::string{"-c \"printf '\\x1B[2J\\x1B[H'; "} + shell + "\"" };
 
-    execlp(shell, shell, nullptr);
+    ::execlp(shell, shell, nullptr);
     throw std::runtime_error{ "shell failed to run" };
   });
 
@@ -30,7 +29,7 @@ try
   backlog.clear();
 
   /* Place terminal in raw mode so that we can pass all terminal
-     input to the pseudoterminal master untouched */
+     input to the pty master untouched */
   tty.enter_raw_mode();
 
   std::array<char, 256> buf{};
@@ -45,12 +44,12 @@ try
     FD_SET(STDIN_FILENO, &in_fds);
     FD_SET(master_fd, &in_fds);
 
-    if(select(master_fd + 1, &in_fds, nullptr, nullptr, nullptr) == -1)
+    if(::select(master_fd + 1, &in_fds, nullptr, nullptr, nullptr) == -1)
     { throw std::runtime_error{ "failed to select" }; }
 
     if(FD_ISSET(STDIN_FILENO, &in_fds)) /* stdin --> pty */
     {
-      num_read = read(STDIN_FILENO, buf.data(), buf.size());
+      num_read = ::read(STDIN_FILENO, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
       bool done{};
@@ -91,13 +90,13 @@ try
       if(done)
       { continue; }
 
-      if(write(master_fd, buf.data(), num_read) != num_read)
+      if(::write(master_fd, buf.data(), num_read) != num_read)
       { throw std::runtime_error{ "partial/failed write (master)" }; }
     }
 
     if(FD_ISSET(master_fd, &in_fds)) /* pty --> stdout + log */
     {
-      num_read = read(master_fd, buf.data(), buf.size());
+      num_read = ::read(master_fd, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
       backlog.write(std::begin(buf), std::begin(buf) + num_read);

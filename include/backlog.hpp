@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 
 #include "resource.hpp"
-#include "tty_state.hpp"
+#include "tty.hpp"
 
 namespace sts
 {
@@ -20,7 +20,7 @@ namespace sts
       using marker_t = std::pair<marker_iterator, marker_iterator>;
 
       backlog() = delete;
-      backlog(tty_state const &tty, std::string const &file)
+      backlog(tty const &tty, std::string const &file)
         : tty_{ tty }
         , file_{ open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH),
@@ -35,13 +35,14 @@ namespace sts
       {
         mark_lines(begin, end);
 
-        clear();
-
+        /* TODO: filter out ansi cursor commands */
         auto const size(std::distance(begin, end));
         if(::write(file_.get(), &*begin, size) != size)
         { throw std::runtime_error{ "partial/failed write (log)" }; }
         std::copy(begin, end, std::back_inserter(buf_));
 
+        if(following_ && line_markers_.size() > tty_.size.ws_row)
+        { scroll_pos_ = line_markers_.size() - tty_.size.ws_row; }
         redraw();
       }
 
@@ -49,14 +50,18 @@ namespace sts
       {
         if(!scroll_pos_)
         { return; }
+        following_ = false;
         --scroll_pos_;
         redraw();
       }
 
       void scroll_down()
       {
-        if(scroll_pos_ + tty_.size.ws_row == line_markers_.size())
-        { return; }
+        if(scroll_pos_ + tty_.size.ws_row >= line_markers_.size())
+        {
+          following_ = true;
+          return;
+        }
         ++scroll_pos_;
         redraw();
       }
@@ -71,6 +76,7 @@ namespace sts
 
       void redraw()
       {
+        clear();
         size_t const count{ tty_.size.ws_row };
         for(size_t i{ scroll_pos_ }; i < scroll_pos_ + std::min(line_markers_.size(), count); ++i)
         {
@@ -115,11 +121,12 @@ namespace sts
         }
       }
 
-      tty_state const &tty_;
+      tty const &tty_;
       resource<int> file_;
       std::string buf_;
       std::vector<marker_t> line_markers_;
       char last_char_{};
       size_t scroll_pos_{};
+      bool following_{ true };
   };
 }

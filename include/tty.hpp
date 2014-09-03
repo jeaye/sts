@@ -8,19 +8,19 @@
 
 namespace sts
 {
-  struct tty_state
+  struct tty
   {
     struct error : std::runtime_error
     { using std::runtime_error::runtime_error; };
 
-    tty_state()
+    tty()
     {
       if(tcgetattr(STDIN_FILENO, &term) == -1)
       { throw error{ "failed to initialize termios" }; }
       if(ioctl(STDIN_FILENO, TIOCGWINSZ, &size) < 0)
       { throw error{ "failed to initialize term size" }; }
     }
-    ~tty_state()
+    ~tty()
     {
       /* XXX: May throw in dtor; should terminate program. */
       tcsetattr(STDIN_FILENO, TCSANOW, &term);
