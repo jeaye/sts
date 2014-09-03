@@ -1,2 +1,6 @@
 # Binaries
 bin/
+
+# Logs
+.in_log
+.out_log
