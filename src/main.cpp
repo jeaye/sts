@@ -72,6 +72,18 @@ try
           backlog.clear();
           done = true;
         }
+        else if(buf[i] == 21)
+        {
+          ofs << "(" << num_read << ") " << "scroll up" << " ";
+          backlog.scroll_up();
+          done = true;
+        }
+        else if(buf[i] == 4)
+        {
+          ofs << "(" << num_read << ") " << "scroll down" << " ";
+          backlog.scroll_down();
+          done = true;
+        }
         else
         { ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " "; }
       }

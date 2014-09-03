@@ -42,22 +42,24 @@ namespace sts
         { throw std::runtime_error{ "partial/failed write (log)" }; }
         std::copy(begin, end, std::back_inserter(buf_));
 
-        size_t const count{ tty_.size.ws_row };
-        for(size_t i{}; i < std::min(line_markers_.size(), count); ++i)
-        {
-          ssize_t size((line_markers_[i].second - line_markers_[i].first) + 1);
-          if(i == std::min(line_markers_.size() - 1, count - 1))
-          { --size; }
-          if(::write(STDOUT_FILENO, &buf_[line_markers_[i].first], size) != size)
-          { throw std::runtime_error{ "partial/failed write (stdout)" }; }
-        }
+        redraw();
       }
 
       void scroll_up()
-      { }
+      {
+        if(!scroll_pos_)
+        { return; }
+        --scroll_pos_;
+        redraw();
+      }
 
       void scroll_down()
-      { }
+      {
+        if(scroll_pos_ + tty_.size.ws_row == line_markers_.size())
+        { return; }
+        ++scroll_pos_;
+        redraw();
+      }
 
       void clear()
       {
@@ -65,6 +67,19 @@ namespace sts
         static ssize_t const clear_size(clear.size());
         if(::write(STDOUT_FILENO, clear.c_str(), clear.size()) != clear_size)
         { throw std::runtime_error{ "unable to clear screen" }; }
+      }
+
+      void redraw()
+      {
+        size_t const count{ tty_.size.ws_row };
+        for(size_t i{ scroll_pos_ }; i < scroll_pos_ + std::min(line_markers_.size(), count); ++i)
+        {
+          ssize_t size((line_markers_[i].second - line_markers_[i].first) + 1);
+          if(i == scroll_pos_ + std::min(line_markers_.size() - 1, count - 1))
+          { --size; }
+          if(::write(STDOUT_FILENO, &buf_[line_markers_[i].first], size) != size)
+          { throw std::runtime_error{ "partial/failed write (stdout)" }; }
+        }
       }
 
     private:
@@ -105,5 +120,6 @@ namespace sts
       std::string buf_;
       std::vector<marker_t> line_markers_;
       char last_char_{};
+      size_t scroll_pos_{};
   };
 }
