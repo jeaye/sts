@@ -8,7 +8,7 @@
 #include <sys/ioctl.h>
 
 #include "tty.hpp"
-#include "resource.hpp"
+#include "detail/resource.hpp"
 
 namespace sts
 {
@@ -83,8 +83,8 @@ namespace sts
 
     private:
       tty const &tty_;
-      resource<int> master_;
-      resource<int> slave_{ &close };
+      detail::resource<int> master_;
+      detail::resource<int> slave_{ &close };
       std::string name_;
       pid_t child_{};
   };

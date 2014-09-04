@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#include "resource.hpp"
+#include "detail/resource.hpp"
 #include "tty.hpp"
 
 namespace sts
@@ -81,7 +81,7 @@ namespace sts
       friend class scroller;
 
       tty const &tty_;
-      resource<int> file_; /* TODO: needed? if so, ofstream */
+      detail::resource<int> file_; /* TODO: needed? if so, ofstream */
       std::string buf_;
       std::vector<marker_t> line_markers_;
       char last_char_{};
