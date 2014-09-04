@@ -7,7 +7,7 @@
 
 #include "tty.hpp"
 #include "pty.hpp"
-#include "backlog.hpp"
+#include "scroller.hpp"
 
 int main(int const, char ** const)
 try
@@ -26,7 +26,8 @@ try
 
   /* Parent: relay data between terminal and pty master */
   sts::backlog backlog{ tty, ".out_log" };
-  backlog.clear();
+  sts::scroller scroller{ backlog };
+  scroller.clear();
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pty master untouched */
@@ -55,32 +56,35 @@ try
       bool done{};
       for(size_t i{}; i < num_read; ++i)
       {
+        /* TODO: refactor into switch on enum */
         if(buf[i] == 25)
         {
           ofs << "(" << num_read << ") " << "scroll up" << " ";
+          scroller.up();
           done = true;
         }
         else if(buf[i] == 5)
         {
           ofs << "(" << num_read << ") " << "scroll down" << " ";
+          scroller.down();
           done = true;
         }
         else if(buf[i] == 11)
         {
           ofs << "(" << num_read << ") " << "clearing" << " ";
-          backlog.clear();
+          scroller.clear();
           done = true;
         }
         else if(buf[i] == 21)
         {
           ofs << "(" << num_read << ") " << "scroll up" << " ";
-          backlog.scroll_up();
+          scroller.up();
           done = true;
         }
         else if(buf[i] == 4)
         {
           ofs << "(" << num_read << ") " << "scroll down" << " ";
-          backlog.scroll_down();
+          scroller.down();
           done = true;
         }
         else
@@ -99,7 +103,7 @@ try
       num_read = ::read(master_fd, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
-      backlog.write(std::begin(buf), std::begin(buf) + num_read);
+      scroller.write(std::begin(buf), std::begin(buf) + num_read);
     }
   }
 }
