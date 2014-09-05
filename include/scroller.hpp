@@ -43,6 +43,16 @@ namespace sts
         redraw();
       }
 
+      void follow()
+      {
+        if(following_)
+        { return; }
+
+        scroll_pos_ = backlog_.line_markers_.size() - backlog_.tty_.size.ws_row;
+        following_ = true;
+        redraw();
+      }
+
       void clear()
       {
         static std::string const clear{ "\x1B[H\x1B[2J" };

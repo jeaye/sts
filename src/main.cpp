@@ -72,23 +72,10 @@ try
           scroller.down();
           done = true;
         }
-        else if(buf[i] == 11)
+        else if(buf[i] == 13)
         {
-          ofs << "(" << num_read << ") " << "clearing" << " ";
-          scroller.clear();
-          done = true;
-        }
-        else if(buf[i] == 21)
-        {
-          ofs << "(" << num_read << ") " << "scroll up" << " ";
-          scroller.up();
-          done = true;
-        }
-        else if(buf[i] == 4)
-        {
-          ofs << "(" << num_read << ") " << "scroll down" << " ";
-          scroller.down();
-          done = true;
+          ofs << "(" << num_read << ") " << "carriage return" << " ";
+          scroller.follow();
         }
         else
         { ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " "; }
