@@ -72,13 +72,11 @@ try
           scroller.down();
           done = true;
         }
-        else if(buf[i] == 13)
+        else
         {
-          ofs << "(" << num_read << ") " << "carriage return" << " ";
+          ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " ";
           scroller.follow();
         }
-        else
-        { ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " "; }
       }
       ofs << std::endl;
       if(done)
