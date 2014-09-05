@@ -55,8 +55,8 @@ namespace sts
       void redraw()
       {
         clear();
-        size_t const rows{ backlog_.tty_.size.ws_row };
-        for(size_t i{ scroll_pos_ };
+        std::size_t const rows{ backlog_.tty_.size.ws_row };
+        for(std::size_t i{ scroll_pos_ };
             i < scroll_pos_ + std::min(backlog_.line_markers_.size(), rows);
             ++i)
         {
@@ -72,7 +72,7 @@ namespace sts
       }
 
       backlog &backlog_;
-      size_t scroll_pos_{};
+      std::size_t scroll_pos_{};
       bool following_{ true };
   };
 }

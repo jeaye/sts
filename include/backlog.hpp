@@ -3,6 +3,7 @@
 #include <vector>
 #include <utility>
 #include <stdexcept>
+#include <fstream> /* TODO */
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -16,33 +17,27 @@ namespace sts
   class backlog
   {
     public:
-      using marker_iterator = size_t;
+      using marker_iterator = std::size_t;
       using marker_t = std::pair<marker_iterator, marker_iterator>;
+      using limit_t = std::size_t;
 
       backlog() = delete;
-      backlog(tty const &tty, std::string const &file)
+      backlog(tty const &tty, std::string const &file, limit_t const limit)
         : tty_{ tty }
-        , file_{ open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
-                      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH),
-                 &close }
-      {
-        if(file_.get() == -1)
-        { throw std::runtime_error{ "failed to open log file" }; }
-      }
+        , limit_{ limit }
+      { }
 
       template <typename It>
       void write(It const &begin, It const &end)
       {
         mark_lines(begin, end);
 
-        /* TODO: filter out ansi cursor commands */
         auto const size(std::distance(begin, end));
-        if(::write(file_.get(), &*begin, size) != size)
-        { throw std::runtime_error{ "partial/failed write (log)" }; }
         if(::write(STDOUT_FILENO, &*begin, size) != size)
         { throw std::runtime_error{ "partial/failed write (stdout)" }; }
 
         std::copy(begin, end, std::back_inserter(buf_));
+        trim();
       }
 
     private:
@@ -78,12 +73,29 @@ namespace sts
         }
       }
 
+      void trim()
+      {
+        if(limit_ == 0 || line_markers_.size() <= tty_.size.ws_row + limit_)
+        { return; }
+
+        auto const excess(line_markers_.size() - (tty_.size.ws_row + limit_));
+        auto const offset(line_markers_[excess].first);
+        line_markers_.erase(std::begin(line_markers_),
+                            std::begin(line_markers_) + excess);
+        buf_.erase(0, offset);
+        for(auto &marker : line_markers_)
+        {
+          marker.first -= offset;
+          marker.second -= offset;
+        }
+      }
+
       friend class scroller;
 
       tty const &tty_;
-      detail::resource<int> file_; /* TODO: needed? if so, ofstream */
       std::string buf_;
       std::vector<marker_t> line_markers_;
       char last_char_{};
+      limit_t const limit_{};
   };
 }

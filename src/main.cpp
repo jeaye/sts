@@ -5,13 +5,16 @@
 #include <fstream>
 #include <iterator>
 
+#include "cmd.hpp"
 #include "tty.hpp"
 #include "pty.hpp"
 #include "scroller.hpp"
 
-int main(int const, char ** const)
+int main(int const argc, char ** const argv)
 try
 {
+  auto const summary(sts::cmd::parse(argc, argv));
+
   sts::tty tty;
   sts::pty pt{ tty };
   pt([]
@@ -25,7 +28,7 @@ try
   });
 
   /* Parent: relay data between terminal and pty master */
-  sts::backlog backlog{ tty, ".out_log" };
+  sts::backlog backlog{ tty, ".out_log", summary.limit };
   sts::scroller scroller{ backlog };
   scroller.clear();
 
@@ -54,7 +57,7 @@ try
       if(num_read <= 0)
       { break; }
       bool done{};
-      for(size_t i{}; i < num_read; ++i)
+      for(std::size_t i{}; i < num_read; ++i)
       {
         /* TODO: refactor into switch on enum */
         if(buf[i] == 25)
@@ -107,6 +110,8 @@ try
     }
   }
 }
+catch(sts::cmd::help_request const &hr)
+{ sts::cmd::show_help(hr); }
 catch(std::exception const &e)
 { std::cout << "exception: " << e.what() << std::endl; }
 catch(...)
