@@ -1,0 +1,13 @@
+cmdline params
+  -u (unlimited)
+  -l <n> (limit to n lines)
+
+mouse support
+
+arrow keys in ctrlp don't work
+
+Test with tmux and screen
+
+When scrolling, return must bring it back down
+
+nop out ansi commands in log?
