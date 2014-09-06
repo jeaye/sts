@@ -76,6 +76,7 @@ namespace sts
         { slave_ = 0; }
 
         func();
+        std::exit(0);
       }
 
       int get_master() const

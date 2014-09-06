@@ -10,92 +10,94 @@
 #include <sys/stat.h>
 
 #include "detail/resource.hpp"
-#include "tty.hpp"
+#include "detail/backlog_impl.hpp"
 
 namespace sts
 {
   class backlog
   {
     public:
-      using marker_iterator = std::size_t;
-      using marker_t = std::pair<marker_iterator, marker_iterator>;
-      using limit_t = std::size_t;
+      using marker_iterator = detail::backlog_impl::marker_iterator;
+      using marker_t = detail::backlog_impl::marker_t;
+      using limit_t = detail::backlog_impl::limit_t;
 
       backlog() = delete;
       backlog(tty const &tty, std::string const &file, limit_t const limit)
         : tty_{ tty }
         , limit_{ limit }
+        , impls_{ { tty_, limit_ } }
       { }
 
       template <typename It>
       void write(It const &begin, It const &end)
       {
-        mark_lines(begin, end);
+        if(!std::distance(begin, end))
+        { return; }
+
+        get_impl().mark_lines(begin, end);
+        parse(begin, end);
 
         auto const size(std::distance(begin, end));
         if(::write(STDOUT_FILENO, &*begin, size) != size)
         { throw std::runtime_error{ "partial/failed write (stdout)" }; }
 
-        std::copy(begin, end, std::back_inserter(buf_));
-        trim();
+        get_impl().write(begin, end);
+        get_impl().trim();
       }
 
     private:
       template <typename It>
-      void mark_lines(It const &begin, It const &end)
+      void parse(It const &begin, It const &end)
       {
-        if(!std::distance(begin, end))
-        { return; }
+        auto distance(std::distance(begin, end));
 
-        if(line_markers_.empty())
-        { line_markers_.emplace_back(0, 0); }
-        else if(last_char_ == '\n')
-        {
-          line_markers_.emplace_back((line_markers_.end() - 1)->second + 1,
-                                     (line_markers_.end() - 1)->second + 1);
-        }
+        std::ofstream ofs{ ".parse", std::ios_base::app };
 
-        marker_t *marker{ &*(line_markers_.end() - 1) };
-        for(auto it(begin); it != end; ++it)
+        for(auto it(begin); it != end; ++it, --distance)
         {
-          auto &i(marker->second);
-          if(*it == '\n')
+          if(distance >= 6 && *it == 27 && *(it + 1) == 91 &&
+             *(it + 2) == 63 && *(it + 3) == 52 && *(it + 4) == 55 &&
+             *(it + 5) == 104)
           {
-            if(it + 1 != end)
+            impls_.emplace_back(tty_, limit_);
+            get_impl().mark_lines(it + 6, end);
+            //std::for_each(it, it + 6, [](char &c)
+            //{ c = ' '; });
+            ofs << "smcup" << std::endl;
+            std::remove_if(begin, end, [rit = begin, it](char const) mutable
             {
-              line_markers_.emplace_back(i + 1, i + 1);
-              marker = &*(line_markers_.end() - 1);
-            }
+              auto const d(rit++ - it);
+              return d >= 0 && d < 6;
+            });
           }
-          else
-          { ++i; }
-          last_char_ = *it;
+          else if(distance >= 6 && *it == 27 && *(it + 1) == 91 &&
+                  *(it + 2) == 63 && *(it + 3) == 52 && *(it + 4) == 55 &&
+                  *(it + 5) == 108)
+          {
+            if(impls_.size() > 1)
+            {
+              impls_.erase(impls_.end() - 1);
+              get_impl().mark_lines(it + 6, end);
+            }
+            //std::for_each(it, it + 6, [](char &c)
+            //{ c = ' '; });
+            ofs << "rmcup" << std::endl;
+            std::remove_if(begin, end, [rit = begin, it](char const) mutable
+            {
+              auto const d(rit++ - it);
+              return d >= 0 && d < 6;
+            });
+          }
         }
       }
 
-      void trim()
-      {
-        if(limit_ == 0 || line_markers_.size() <= tty_.size.ws_row + limit_)
-        { return; }
-
-        auto const excess(line_markers_.size() - (tty_.size.ws_row + limit_));
-        auto const offset(line_markers_[excess].first);
-        line_markers_.erase(std::begin(line_markers_),
-                            std::begin(line_markers_) + excess);
-        buf_.erase(0, offset);
-        for(auto &marker : line_markers_)
-        {
-          marker.first -= offset;
-          marker.second -= offset;
-        }
-      }
+      detail::backlog_impl& get_impl()
+      { return impls_.at(impls_.size() - 1); }
 
       friend class scroller;
 
       tty const &tty_;
-      std::string buf_;
-      std::vector<marker_t> line_markers_;
-      char last_char_{};
       limit_t const limit_{};
+      std::vector<detail::backlog_impl> impls_;
   };
 }

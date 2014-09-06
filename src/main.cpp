@@ -41,7 +41,6 @@ try
   ssize_t num_read{};
   fd_set in_fds{};
   int const master_fd{ pt.get_master() };
-  std::ofstream ofs{ ".in_log" };
 
   while(true)
   {

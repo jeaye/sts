@@ -17,8 +17,9 @@ namespace sts
       {
         backlog_.write(begin, end);
 
-        auto const line_markers_size(backlog_.line_markers_.size());
-        auto const rows(backlog_.tty_.size.ws_row);
+        auto &impl(backlog_.get_impl());
+        auto const line_markers_size(impl.line_markers_.size());
+        auto const rows(impl.tty_.get().size.ws_row);
         if(following_ && line_markers_size > rows)
         { scroll_pos_ = line_markers_size - rows; }
       }
@@ -34,7 +35,8 @@ namespace sts
 
       void down()
       {
-        if(scroll_pos_ + backlog_.tty_.size.ws_row >= backlog_.line_markers_.size())
+        auto &impl(backlog_.get_impl());
+        if(scroll_pos_ + impl.tty_.get().size.ws_row >= impl.line_markers_.size())
         {
           following_ = true;
           return;
@@ -45,10 +47,11 @@ namespace sts
 
       void follow()
       {
+        auto &impl(backlog_.get_impl());
         if(following_)
         { return; }
 
-        scroll_pos_ = backlog_.line_markers_.size() - backlog_.tty_.size.ws_row;
+        scroll_pos_ = impl.line_markers_.size() - impl.tty_.get().size.ws_row;
         following_ = true;
         redraw();
       }
@@ -65,17 +68,19 @@ namespace sts
       void redraw()
       {
         clear();
-        std::size_t const rows{ backlog_.tty_.size.ws_row };
+
+        auto &impl(backlog_.get_impl());
+        std::size_t const rows{ impl.tty_.get().size.ws_row };
         for(std::size_t i{ scroll_pos_ };
-            i < scroll_pos_ + std::min(backlog_.line_markers_.size(), rows);
+            i < scroll_pos_ + std::min(impl.line_markers_.size(), rows);
             ++i)
         {
-          ssize_t size((backlog_.line_markers_[i].second -
-                        backlog_.line_markers_[i].first) + 1);
-          if(i == scroll_pos_ + std::min(backlog_.line_markers_.size() - 1,
+          ssize_t size((impl.line_markers_[i].second -
+                        impl.line_markers_[i].first) + 1);
+          if(i == scroll_pos_ + std::min(impl.line_markers_.size() - 1,
                                          rows - 1))
           { --size; }
-          if(::write(STDOUT_FILENO, &backlog_.buf_[backlog_.line_markers_[i].first],
+          if(::write(STDOUT_FILENO, &impl.buf_[impl.line_markers_[i].first],
                      size) != size)
           { throw std::runtime_error{ "partial/failed write (stdout)" }; }
         }
