@@ -9,6 +9,7 @@
 #include "tty.hpp"
 #include "pty.hpp"
 #include "scroller.hpp"
+#include "input.hpp"
 
 int main(int const argc, char ** const argv)
 try
@@ -56,30 +57,8 @@ try
       num_read = ::read(STDIN_FILENO, buf.data(), buf.size());
       if(num_read <= 0)
       { break; }
-      bool done{};
-      for(std::size_t i{}; i < num_read; ++i)
-      {
-        /* TODO: refactor into switch on enum */
-        if(buf[i] == 25)
-        {
-          ofs << "(" << num_read << ") " << "scroll up" << " ";
-          scroller.up();
-          done = true;
-        }
-        else if(buf[i] == 5)
-        {
-          ofs << "(" << num_read << ") " << "scroll down" << " ";
-          scroller.down();
-          done = true;
-        }
-        else
-        {
-          ofs << "(" << num_read << ") " << static_cast<int>(buf[i]) << " ";
-          scroller.follow();
-        }
-      }
-      ofs << std::endl;
-      if(done)
+
+      if(sts::input::parse(scroller, buf, num_read))
       { continue; }
 
       if(::write(master_fd, buf.data(), num_read) != num_read)
