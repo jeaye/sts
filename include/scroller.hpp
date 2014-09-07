@@ -1,6 +1,7 @@
 #pragma once
 
 #include "backlog.hpp"
+#include "detail/util.hpp"
 
 namespace sts
 {
@@ -13,8 +14,13 @@ namespace sts
       { }
 
       template <typename It>
-      void write(It const &begin, It const &end)
+      void write(It const &begin, It end)
       {
+        auto const size(std::distance(begin, end));
+        if(::write(STDOUT_FILENO, &*begin, size) != size)
+        { throw std::runtime_error{ "partial/failed write (stdout)" }; }
+
+        end = filter(begin, end);
         backlog_.write(begin, end);
 
         auto &impl(backlog_.get_impl());
@@ -65,6 +71,61 @@ namespace sts
       }
 
     private:
+      template <typename It>
+      It filter(It const &begin, It end)
+      {
+        auto distance(std::distance(begin, end));
+        size_t d{};
+        auto const predicates(detail::make_array<std::function<size_t (It)>>(
+          [&](It const it)
+          {
+            d = (distance >= 6 && *it == 27 && *(it + 1) == 91 &&
+                *(it + 2) == 63 && *(it + 3) == 52 && *(it + 4) == 55 &&
+                *(it + 5) == 104) * 6;
+            if(d)
+            {
+              backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_);
+              backlog_.get_impl().mark_lines(it + 6, end);
+            }
+            return d;
+          },
+          [&](It const it)
+          {              
+            d = (distance >= 6 && *it == 27 && *(it + 1) == 91 &&
+                *(it + 2) == 63 && *(it + 3) == 52 && *(it + 4) == 55 &&
+                *(it + 5) == 108) * 6;
+            if(d && backlog_.impls_.size() > 1)
+            {
+              backlog_.impls_.erase(backlog_.impls_.end() - 1);
+              backlog_.get_impl().mark_lines(it + 6, end);
+            }
+            return d;
+          }
+        ));
+
+        auto const pred_end(std::end(predicates));
+        for(auto it(begin); it != end; ++it, --distance)
+        {
+          while(std::find_if(std::begin(predicates), pred_end,
+            [&](std::function<size_t (It)> const &f)
+            { return f(it); }) != pred_end)
+          {
+            auto rit(begin), sub_end(it + d);
+            end = std::remove_if(begin, end, [&](char const)
+            {
+              auto const cur(rit++);
+              return (cur >= it && cur < sub_end);
+            });
+          }
+
+          /* We may have adjusted to be the end, so incrementing would be bad. */
+          if(it == end)
+          { break; }
+        }
+
+        return end;
+      }
+
       void redraw()
       {
         clear();

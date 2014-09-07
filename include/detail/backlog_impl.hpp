@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <fstream>
 
 #include "tty.hpp"
 
@@ -24,7 +25,11 @@ namespace sts
 
       template <typename It>
       void write(It const &begin, It const &end)
-      { std::copy(begin, end, std::back_inserter(buf_)); }
+      {
+        std::copy(begin, end, std::back_inserter(buf_));
+        std::ofstream ofs{ ".buf", std::ios_base::app };
+        std::copy(begin, end, std::ostream_iterator<char>(ofs));
+      }
 
       template <typename It>
       void mark_lines(It const &begin, It const &end)
