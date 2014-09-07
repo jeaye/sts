@@ -77,30 +77,22 @@ namespace sts
         auto distance(std::distance(begin, end));
         size_t d{};
         auto const predicates(detail::make_array<std::function<size_t (It)>>(
-          [&](It const it)
-          {
-            d = (distance >= 6 && *it == 27 && *(it + 1) == '[' &&
-                *(it + 2) == '?' && *(it + 3) == '4' && *(it + 4) == '7' &&
-                *(it + 5) == 'h') * 6;
-            if(d)
-            { backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_); }
-            return d;
-          },
-          [&](It const it)
-          {              
-            d = (distance >= 6 && *it == 27 && *(it + 1) == '[' &&
-                *(it + 2) == '?' && *(it + 3) == '4' && *(it + 4) == '7' &&
-                *(it + 5) == 'l') * 6;
-            if(d && backlog_.impls_.size() > 1)
-            { backlog_.impls_.erase(backlog_.impls_.end() - 1); }
-            return d;
-          },
-          [&](It const it)
-          {              
-            d = (distance >= 4 && *it == 27 && *(it + 1) == '[' &&
-                *(it + 2) == '2' && *(it + 3) == 'J') * 4;
-            return d;
-          }
+        [&](It const it)
+        {
+          d = distance >= 6 && detail::seq<6>(it, { 27, '[', '?', '4', '7', 'h' });
+          if(d)
+          { backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_); }
+          return d;
+        },
+        [&](It const it)
+        {              
+          d = distance >= 6 && detail::seq<6>(it, { 27, '[', '?', '4', '7', 'l' });
+          if(d && backlog_.impls_.size() > 1)
+          { backlog_.impls_.erase(backlog_.impls_.end() - 1); }
+          return d;
+        },
+        [&](It const it)
+        { return d = distance >= 4 && detail::seq<4>(it, { 27, '[', '2', 'J' }); }
         ));
 
         auto const pred_end(std::end(predicates));
@@ -110,7 +102,8 @@ namespace sts
             [&](std::function<size_t (It)> const &f)
             { return f(it); }) != pred_end)
           {
-            auto rit(begin), sub_end(it + d);
+            auto const sub_end(it + d);
+            auto rit(begin);
             end = std::remove_if(begin, end, [&](char const)
             {
               auto const cur(rit++);
