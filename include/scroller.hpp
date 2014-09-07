@@ -79,26 +79,26 @@ namespace sts
         auto const predicates(detail::make_array<std::function<size_t (It)>>(
           [&](It const it)
           {
-            d = (distance >= 6 && *it == 27 && *(it + 1) == 91 &&
-                *(it + 2) == 63 && *(it + 3) == 52 && *(it + 4) == 55 &&
-                *(it + 5) == 104) * 6;
+            d = (distance >= 6 && *it == 27 && *(it + 1) == '[' &&
+                *(it + 2) == '?' && *(it + 3) == '4' && *(it + 4) == '7' &&
+                *(it + 5) == 'h') * 6;
             if(d)
-            {
-              backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_);
-              backlog_.get_impl().mark_lines(it + 6, end);
-            }
+            { backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_); }
             return d;
           },
           [&](It const it)
           {              
-            d = (distance >= 6 && *it == 27 && *(it + 1) == 91 &&
-                *(it + 2) == 63 && *(it + 3) == 52 && *(it + 4) == 55 &&
-                *(it + 5) == 108) * 6;
+            d = (distance >= 6 && *it == 27 && *(it + 1) == '[' &&
+                *(it + 2) == '?' && *(it + 3) == '4' && *(it + 4) == '7' &&
+                *(it + 5) == 'l') * 6;
             if(d && backlog_.impls_.size() > 1)
-            {
-              backlog_.impls_.erase(backlog_.impls_.end() - 1);
-              backlog_.get_impl().mark_lines(it + 6, end);
-            }
+            { backlog_.impls_.erase(backlog_.impls_.end() - 1); }
+            return d;
+          },
+          [&](It const it)
+          {              
+            d = (distance >= 4 && *it == 27 && *(it + 1) == '[' &&
+                *(it + 2) == '2' && *(it + 3) == 'J') * 4;
             return d;
           }
         ));
@@ -116,9 +116,11 @@ namespace sts
               auto const cur(rit++);
               return (cur >= it && cur < sub_end);
             });
+
+            if(it == end)
+            { break; }
           }
 
-          /* We may have adjusted to be the end, so incrementing would be bad. */
           if(it == end)
           { break; }
         }
