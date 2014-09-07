@@ -38,7 +38,7 @@ namespace sts
         get_impl().mark_lines(begin, end);
 
         auto const size(std::distance(begin, end));
-        std::ofstream ofs{ ".out", std::ios_base::app };
+        std::ofstream ofs{ ".out" + std::to_string(impls_.size()), std::ios_base::app };
         ofs.write(&*begin, size);
 
         get_impl().write(begin, end);

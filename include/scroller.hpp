@@ -93,7 +93,23 @@ namespace sts
           return d;
         },
         [&](It const it)
-        { return d = detail::seq_eq<4>(distance, it, { 27, '[', '2', 'J' }); }
+        { return d = detail::seq_eq<4>(distance, it, { 27, '[', '2', 'J' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<2>(distance, it, { 27, '7' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<2>(distance, it, { 27, '8' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<3>(distance, it, { 27, '[', 'K' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<4>(distance, it, { 27, '[', '?', '1' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<2>(distance, it, { 27, '>' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<6>(distance, it, { 27, '[', '?', '2', '5', 'h' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<8>(distance, it, { 27, '[', '3', '0', ';', '1', 'H', 'l' }); },
+        [&](It const it)
+        { return d = detail::seq_eq<7>(distance, it, { 27, '[', '3', '0', ';', '1', 'H' }); }
         ));
 
         auto const pred_end(std::end(predicates));
