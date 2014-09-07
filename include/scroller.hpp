@@ -74,25 +74,26 @@ namespace sts
       template <typename It>
       It filter(It const &begin, It end)
       {
+        std::ofstream ofs{ ".filter", std::ios_base::app };
         auto distance(std::distance(begin, end));
         size_t d{};
         auto const predicates(detail::make_array<std::function<size_t (It)>>(
         [&](It const it)
         {
-          d = distance >= 6 && detail::seq<6>(it, { 27, '[', '?', '4', '7', 'h' });
+          d = detail::seq_eq<6>(distance, it, { 27, '[', '?', '4', '7', 'h' });
           if(d)
           { backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_); }
           return d;
         },
         [&](It const it)
         {              
-          d = distance >= 6 && detail::seq<6>(it, { 27, '[', '?', '4', '7', 'l' });
+          d = detail::seq_eq<6>(distance, it, { 27, '[', '?', '4', '7', 'l' });
           if(d && backlog_.impls_.size() > 1)
           { backlog_.impls_.erase(backlog_.impls_.end() - 1); }
           return d;
         },
         [&](It const it)
-        { return d = distance >= 4 && detail::seq<4>(it, { 27, '[', '2', 'J' }); }
+        { return d = detail::seq_eq<4>(distance, it, { 27, '[', '2', 'J' }); }
         ));
 
         auto const pred_end(std::end(predicates));
@@ -102,6 +103,8 @@ namespace sts
             [&](std::function<size_t (It)> const &f)
             { return f(it); }) != pred_end)
           {
+            std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
+            ofs << std::endl;
             auto const sub_end(it + d);
             auto rit(begin);
             end = std::remove_if(begin, end, [&](char const)
@@ -109,6 +112,8 @@ namespace sts
               auto const cur(rit++);
               return (cur >= it && cur < sub_end);
             });
+            std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
+            ofs << std::endl;
 
             if(it == end)
             { break; }

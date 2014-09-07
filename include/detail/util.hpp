@@ -13,7 +13,7 @@ namespace sts
 
     template <size_t N, typename It,
               typename T = typename std::iterator_traits<It>::value_type>
-    size_t seq(It it, std::array<T, N> const &arr)
-    { return std::equal(it, it + N, std::begin(arr)) * N; }
+    std::size_t seq_eq(std::size_t const d, It it, std::array<T, N> const &arr)
+    { return (d >= N && std::equal(it, it + N, std::begin(arr))) * N; }
   }
 }
