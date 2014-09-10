@@ -3,6 +3,9 @@
 #include "backlog.hpp"
 #include "detail/util.hpp"
 
+#include <regex>
+#include <algorithm>
+
 namespace sts
 {
   class scroller
@@ -75,68 +78,41 @@ namespace sts
       It filter(It const &begin, It end)
       {
         std::ofstream ofs{ ".filter", std::ios_base::app };
-        auto distance(std::distance(begin, end));
-        size_t d{};
-        auto const predicates(detail::make_array<std::function<size_t (It)>>(
-        [&](It const it)
-        {
-          d = detail::seq_eq<6>(distance, it, { 27, '[', '?', '4', '7', 'h' });
-          if(d)
-          { backlog_.impls_.emplace_back(backlog_.tty_, backlog_.limit_); }
-          return d;
-        },
-        [&](It const it)
-        {              
-          d = detail::seq_eq<6>(distance, it, { 27, '[', '?', '4', '7', 'l' });
-          if(d && backlog_.impls_.size() > 1)
-          { backlog_.impls_.erase(backlog_.impls_.end() - 1); }
-          return d;
-        },
-        [&](It const it)
-        { return d = detail::seq_eq<4>(distance, it, { 27, '[', '2', 'J' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<2>(distance, it, { 27, '7' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<2>(distance, it, { 27, '8' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<3>(distance, it, { 27, '[', 'K' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<4>(distance, it, { 27, '[', '?', '1' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<2>(distance, it, { 27, '>' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<6>(distance, it, { 27, '[', '?', '2', '5', 'h' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<8>(distance, it, { 27, '[', '3', '0', ';', '1', 'H', 'l' }); },
-        [&](It const it)
-        { return d = detail::seq_eq<7>(distance, it, { 27, '[', '3', '0', ';', '1', 'H' }); }
+        static auto const predicates(detail::make_array
+        (
+          std::regex{ "\x1B\\[\\?47(h|l)" }, /* smcup/rmcup */
+          std::regex{ "\x1B\\[2J" }, /* clear */
+          std::regex{ "\x1B\\[([[:digit:]])*(A|B|C|D|E|F|G|J|K|S|T)" }, /* move cursor/scroll */
+          std::regex{ "\x1B\\[([[:digit:]])*;([[:digit:]])*(H|f)" }, /* move cursor */
+          std::regex{ "\x1B\\[6n" }, /* report cursor */
+          std::regex{ "\x1B\\[(s|u)" }, /* save/restore cursor */
+          std::regex{ "\x1B\\[\\?25(h|l)" } /* show/hide cursor */
         ));
 
-        auto const pred_end(std::end(predicates));
-        for(auto it(begin); it != end; ++it, --distance)
+        std::smatch match;
+        for(auto const &pred : predicates)
         {
-          while(std::find_if(std::begin(predicates), pred_end,
-            [&](std::function<size_t (It)> const &f)
-            { return f(it); }) != pred_end)
+          while(std::regex_search(std::string{begin, end}, match, pred))
           {
             std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
             ofs << std::endl;
-            auto const sub_end(it + d);
+            ofs << "filtering (" << match.position() << ")"
+                << "[" << match.length() << "]: ";
+            std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
+            ofs << std::endl;
+
+            auto const it(begin + match.position());
+            auto const sub_end(it + match.length());
             auto rit(begin);
             end = std::remove_if(begin, end, [&](char const)
             {
               auto const cur(rit++);
               return (cur >= it && cur < sub_end);
             });
+
             std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
             ofs << std::endl;
-
-            if(it == end)
-            { break; }
           }
-
-          if(it == end)
-          { break; }
         }
 
         return end;
