@@ -94,7 +94,7 @@ namespace sts
       }
 
       template <typename T, typename It>
-      friend It detail::filter(T&, It const&, It);
+      friend It detail::filter(T&, It, It);
 
       backlog &backlog_;
       std::size_t scroll_pos_{};

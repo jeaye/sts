@@ -11,6 +11,7 @@ namespace sts
     class resource
     {
       public:
+        /* TODO: copy dtor */
         using dtor_t = std::function<void (T&)>;
 
         resource() = delete;

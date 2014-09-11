@@ -23,14 +23,13 @@ namespace sts
         , func{ std::move(f) }
       { }
 
-      std::regex regex;
-      func_t func;
+      std::regex const regex;
+      func_t const func;
     };
 
     template <typename T, typename It>
-    It filter(T &self, It const &begin, It end)
+    It filter(T &self, It const begin, It end)
     {
-      std::ofstream ofs{ ".filter", std::ios_base::app };
       static auto const predicates(detail::make_array
       (
         /* smcup */
@@ -56,15 +55,27 @@ namespace sts
         /* clear */
         predicate<T>{ "\x1B\\[2J" },
         /* move cursor/scroll */
-        predicate<T>{ "\x1B\\[([[:digit:]]){0,3}(A|B|C|D|E|F|G|J|K|S|T)", },
+        predicate<T>{ "\x1B\\[([[:digit:]]){0,3}(A|B|C|D|E|F|G|J|K|S|T)" },
         /* move cursor */
-        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};([[:digit:]]){0,3}(H|f)", },
-        /* report cursor */
-        predicate<T>{ "\x1B\\[6n", },
+        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};([[:digit:]]){0,3}(H|f)" },
+        /* report device */
+        predicate<T>{ "\x1B\\[[[:digit:]]n" },
         /* save/restore cursor */
         predicate<T>{ "\x1B\\[(s|u)" },
+        /* save/restore cursor attributes */
+        predicate<T>{ "\x1B(7|8)" },
         /* show/hide cursor */
-        predicate<T>{ "\x1B\\[\\?25(h|l)" }
+        predicate<T>{ "\x1B\\[\\?25(h|l)" },
+        /* scroll screen */
+        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};([[:digit:]]){0,3}r" },
+        /* scroll down/up */
+        predicate<T>{ "\x1B(D|M)" },
+        /* set tab */
+        predicate<T>{ "\x1BH" },
+        /* clear tab */
+        predicate<T>{ "\x1B\\[3?g" },
+        /* [re]set mode */
+        predicate<T>{ "\x1B\\[=([[:digit:]]){0,2}(h|l)" }
       ));
 
       std::smatch match;
@@ -76,14 +87,7 @@ namespace sts
           if(pred.func)
           { pred.func(self); }
 
-          std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
-          ofs << std::endl;
-          ofs << "filtering (" << match.position() << ")"
-              << "[" << match.length() << "]: ";
           auto const str(match.str());
-          std::copy(std::begin(str), std::end(str), std::ostream_iterator<int>(ofs, " "));
-          ofs << std::endl;
-
           auto const it(begin + match.position());
           auto const sub_end(it + match.length());
           auto rit(begin);
@@ -92,9 +96,6 @@ namespace sts
             auto const cur(rit++);
             return (cur >= it && cur < sub_end);
           });
-
-          std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
-          ofs << std::endl;
         }
       }
 

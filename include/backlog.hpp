@@ -52,7 +52,7 @@ namespace sts
 
       friend class scroller;
       template <typename T, typename It>
-      friend It detail::filter(T&, It const&, It);
+      friend It detail::filter(T&, It, It);
 
       tty const &tty_;
       limit_t const limit_{};
