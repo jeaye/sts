@@ -12,6 +12,7 @@
 
 #include "detail/resource.hpp"
 #include "detail/backlog_impl.hpp"
+#include "detail/filter.hpp"
 
 namespace sts
 {
@@ -50,6 +51,8 @@ namespace sts
       { return impls_.at(impls_.size() - 1); }
 
       friend class scroller;
+      template <typename T, typename It>
+      friend It detail::filter(T&, It const&, It);
 
       tty const &tty_;
       limit_t const limit_{};
