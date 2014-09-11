@@ -74,31 +74,76 @@ namespace sts
       }
 
     private:
+      struct predicate
+      {
+        using regex_t = std::regex;
+        using func_t = std::function<void (scroller&)>;
+
+        predicate() = delete;
+        predicate(regex_t &&r)
+          : regex{ std::move(r) }
+        { }
+        predicate(regex_t &&r, func_t &&f)
+          : regex{ std::move(r) }
+          , func{ std::move(f) }
+        { }
+
+        regex_t regex;
+        func_t func;
+      };
       template <typename It>
       It filter(It const &begin, It end)
       {
         std::ofstream ofs{ ".filter", std::ios_base::app };
-        static auto const predicates(detail::make_array
+        static auto const predicates(detail::make_array<predicate>
         (
-          std::regex{ "\x1B\\[\\?47(h|l)" }, /* smcup/rmcup */
-          std::regex{ "\x1B\\[2J" }, /* clear */
-          std::regex{ "\x1B\\[([[:digit:]])*(A|B|C|D|E|F|G|J|K|S|T)" }, /* move cursor/scroll */
-          std::regex{ "\x1B\\[([[:digit:]])*;([[:digit:]])*(H|f)" }, /* move cursor */
-          std::regex{ "\x1B\\[6n" }, /* report cursor */
-          std::regex{ "\x1B\\[(s|u)" }, /* save/restore cursor */
-          std::regex{ "\x1B\\[\\?25(h|l)" } /* show/hide cursor */
+          predicate{ /* smcup/rmcup */
+            std::regex{ "\x1B\\[\\?47(h|l)" },
+            [](scroller &self)
+            {
+              self.backlog_.impls_.emplace_back(self.backlog_.tty_,
+                                                self.backlog_.limit_);
+            }
+          },
+          predicate{ /* clear */
+            std::regex{ "\x1B\\[2J" }
+          },
+          predicate{ /* move cursor/scroll */
+            std::regex{ "\x1B\\[([[:digit:]]){0,3}(A|B|C|D|E|F|G|J|K|S|T)" },
+            {}
+          },
+          predicate{ /* move cursor */
+            std::regex{ "\x1B\\[([[:digit:]]){0,3};([[:digit:]]){0,3}(H|f)" },
+            {}
+          },
+          predicate{ /* report cursor */
+            std::regex{ "\x1B\\[6n" },
+            {}
+          },
+          predicate{ /* save/restore cursor */
+            std::regex{ "\x1B\\[(s|u)" },
+            {}
+          },
+          predicate{ /* show/hide cursor */
+            std::regex{ "\x1B\\[\\?25(h|l)" },
+            {}
+          }
         ));
 
         std::smatch match;
         for(auto const &pred : predicates)
         {
-          while(std::regex_search(std::string{begin, end}, match, pred))
+          while(std::regex_search(std::string{begin, end}, match, pred.regex))
           {
+            if(pred.func)
+            { pred.func(*this); }
+
             std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
             ofs << std::endl;
             ofs << "filtering (" << match.position() << ")"
                 << "[" << match.length() << "]: ";
-            std::copy(begin, end, std::ostream_iterator<int>(ofs, " "));
+            auto const str(match.str());
+            std::copy(std::begin(str), std::end(str), std::ostream_iterator<int>(ofs, " "));
             ofs << std::endl;
 
             auto const it(begin + match.position());
