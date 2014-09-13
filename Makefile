@@ -28,7 +28,7 @@ ${TARGET}: options ${OBJ}
 
 clean:
 	echo "cleaning"
-	rm -f ${TARGET} ${OBJ} sts-${VERSION}.tar.gz
+	rm -f ${TARGET} ${OBJ}
 
 install: ${TARGET}
 	echo "installing executable file to ${DESTDIR}${PREFIX}/bin"
@@ -37,7 +37,6 @@ install: ${TARGET}
 	chmod 755 ${DESTDIR}${PREFIX}/bin/sts
 	echo "installing manual page to ${DESTDIR}${MANPREFIX}/man1"
 	mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	sed "s/VERSION/${VERSION}/g" < sts.1 > ${DESTDIR}${MANPREFIX}/man1/sts.1
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/sts.1
 
 uninstall:
@@ -45,6 +44,12 @@ uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/sts
 	echo "removing manual page from ${DESTDIR}${MANPREFIX}/man1"
 	rm -f ${DESTDIR}${MANPREFIX}/man1/sts.1
+
+# for internal usage only
+man:
+	rm -f sts.1
+	md2man-roff sts.md > sts.1
+	sed -i "s/VERSION/${VERSION}/g" sts.1
 
 # for debugging purposes only
 shell:
