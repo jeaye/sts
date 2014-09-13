@@ -34,7 +34,7 @@ try
 
   /* Place terminal in raw mode so that we can pass all terminal
      input to the pty master untouched */
-  tty.enter_raw_mode();
+  sts::raw_mode const rm{ tty };
 
   std::array<char, 256> buf{{}};
   ssize_t num_read{};
