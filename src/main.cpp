@@ -75,6 +75,8 @@ try
 }
 catch(sts::cmd::help_request const &hr)
 { sts::cmd::show_help(hr); }
+catch(sts::cmd::version_request const &vr)
+{ sts::cmd::show_version(vr); }
 catch(std::exception const &e)
 { std::cout << "exception: " << e.what() << std::endl; }
 catch(...)

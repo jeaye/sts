@@ -16,6 +16,8 @@ namespace sts
 
     struct help_request
     { std::string name; };
+    struct version_request
+    { std::string name; };
 
     summary parse(int argc, char **argv)
     {
@@ -28,26 +30,28 @@ namespace sts
 
       try
       {
-      for(int i{}; i < argc; ++i)
-      {
-        std::string const arg{ argv[i] };
-        if(arg == "-h" || arg == "--help")
-        { throw help_request{ sum.name }; }
-        else if(arg == "-u" || arg == "--unlimited")
-        { sum.limit = 0; }
-        else if(arg == "-l" || arg == "--limit")
+        for(int i{}; i < argc; ++i)
         {
-          if(i + 1 == argc)
-          { throw std::invalid_argument{ "invalid limit specifier; use " + arg + " buf_limit" }; }
-          auto const limit(std::stoll(argv[i + 1]));
-          if(limit < 0)
-          { throw std::invalid_argument{ "invalid limit; must not be negative" }; }
-          sum.limit = limit;
-          ++i;
+          std::string const arg{ argv[i] };
+          if(arg == "-h" || arg == "--help")
+          { throw help_request{ sum.name }; }
+          else if(arg == "-u" || arg == "--unlimited")
+          { sum.limit = 0; }
+          else if(arg == "-l" || arg == "--limit")
+          {
+            if(i + 1 == argc)
+            { throw std::invalid_argument{ "invalid limit specifier; use " + arg + " buf_limit" }; }
+            auto const limit(std::stoll(argv[i + 1]));
+            if(limit < 0)
+            { throw std::invalid_argument{ "invalid limit; must not be negative" }; }
+            sum.limit = limit;
+            ++i;
+          }
+          else if(arg == "-v" || arg == "--version")
+          { throw version_request{ sum.name }; }
+          else
+          { throw help_request{ sum.name }; }
         }
-        else
-        { throw help_request{ sum.name }; }
-      }
       }
       catch(std::invalid_argument const &e)
       {
@@ -67,6 +71,14 @@ namespace sts
       << "  -h,  --help                         Show this help message and exit\n"
       << "  -u,  --unlimited                    [default] Enable unlimited backlog\n"
       << "  -l buf_limit, --limit buf_limit     [default = 0] Specify backlog limit in lines\n" ;
+      std::exit(0);
+    }
+
+    [[noreturn]] void show_version(version_request const &vr)
+    {
+      std::cout << vr.name << " v" << VERSION
+                << " compiled " << __DATE__
+                << std::endl;
       std::exit(0);
     }
   }
