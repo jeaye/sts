@@ -37,6 +37,7 @@ install: ${TARGET}
 	chmod 755 ${DESTDIR}${PREFIX}/bin/sts
 	echo "installing manual page to ${DESTDIR}${MANPREFIX}/man1"
 	mkdir -p ${DESTDIR}${MANPREFIX}/man1
+	cp -f sts.1 ${DESTDIR}${MANPREFIX}/man1/
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/sts.1
 
 uninstall:
