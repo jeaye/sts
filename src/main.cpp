@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include <string>
 #include <array>
-#include <fstream>
 #include <iterator>
 
 #include "cmd.hpp"

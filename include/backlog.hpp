@@ -3,8 +3,6 @@
 #include <vector>
 #include <utility>
 #include <stdexcept>
-#include <fstream> /* TODO */
-#include <iterator> /* TODO */
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -37,11 +35,6 @@ namespace sts
         { return; }
 
         get_impl().mark_lines(begin, end);
-
-        auto const size(std::distance(begin, end));
-        std::ofstream ofs{ ".out" + std::to_string(impls_.size()), std::ios_base::app };
-        ofs.write(&*begin, size);
-
         get_impl().write(begin, end);
         get_impl().trim();
       }
