@@ -12,7 +12,7 @@ LIBS +=
 
 # flags
 CPPFLAGS += -DVERSION=\"${VERSION}\"
-CXXFLAGS += -std=c++11 -Wall -Wextra -Werror -pedantic -O3 ${INCS} ${CPPFLAGS}
+CXXFLAGS += -std=c++14 -Wall -Wextra -Werror -pedantic -O3 ${INCS} ${CPPFLAGS}
 LDFLAGS += ${LIBS}
 
 # compiler and linker

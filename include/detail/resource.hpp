@@ -11,15 +11,14 @@ namespace sts
     class resource
     {
       public:
-        /* TODO: copy dtor */
         using dtor_t = std::function<void (T&)>;
 
         resource() = delete;
-        resource(dtor_t const &dtor)
-          : dtor_{ dtor }
+        resource(dtor_t &&dtor)
+          : dtor_{ std::move(dtor) }
         { }
         resource(resource const&) = delete;
-        resource(resource &&) noexcept = default;
+        resource(resource &&) = default;
         resource(T &&t, dtor_t const &dtor) 
           : data_(std::move(t)), dtor_{ dtor }
         { }

@@ -78,11 +78,10 @@ namespace sts
         predicate<T>{ "\x1B\\[=([[:digit:]]){0,2}(h|l)" }
       ));
 
-      std::smatch match;
+      std::cmatch match;
       for(auto const &pred : predicates)
       {
-        /* TODO: string */
-        while(std::regex_search(std::string{ begin, end }, match, pred.regex))
+        while(std::regex_search<char const*>(begin, end, match, pred.regex))
         {
           if(pred.func)
           { pred.func(self); }
