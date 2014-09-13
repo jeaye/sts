@@ -29,7 +29,7 @@ try
   });
 
   /* Parent: relay data between terminal and pty master */
-  sts::backlog backlog{ tty, ".out_log", summary.limit };
+  sts::backlog backlog{ tty, summary.limit };
   sts::scroller scroller{ backlog };
   scroller.clear();
 
@@ -37,9 +37,9 @@ try
      input to the pty master untouched */
   tty.enter_raw_mode();
 
-  std::array<char, 256> buf{};
+  std::array<char, 256> buf{{}};
   ssize_t num_read{};
-  fd_set in_fds{};
+  fd_set in_fds{{}};
   int const master_fd{ pt.get_master() };
 
   while(true)

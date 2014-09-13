@@ -24,7 +24,7 @@ namespace sts
       using limit_t = detail::backlog_impl::limit_t;
 
       backlog() = delete;
-      backlog(tty const &tty, std::string const &file, limit_t const limit)
+      backlog(tty const &tty, limit_t const limit)
         : tty_{ tty }
         , limit_{ limit }
         , impls_{ { tty_, limit_ } }

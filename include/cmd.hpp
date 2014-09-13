@@ -60,7 +60,7 @@ namespace sts
 
     [[noreturn]] void show_help(help_request const &hr)
     {
-      std::cout << hr.name << " v0.1.hash\n" /* TODO hash */
+      std::cout << hr.name << " v" << VERSION << std::endl
       << "usage:\n  " << hr.name << " [-u] [-l buf_limit]\n"
       << std::endl
       << "options:\n"

@@ -7,3 +7,6 @@ bin/
 
 # YCM
 *.pyc
+
+# Object files
+*.cpp.o

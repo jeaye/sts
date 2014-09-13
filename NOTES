@@ -1,8 +1,13 @@
 arrow keys in ctrlp don't work
-  st bug
+  st bug (change TERM?)
 
 Test with tmux and screen
+  after filtering
 
-nop out ansi commands in log?
+regex for filtering?
+  use regex to replace as well
+  separate into filter.hpp
 
-input.hpp for keyboard input
+readme
+
+makefile
