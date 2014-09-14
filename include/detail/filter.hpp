@@ -75,6 +75,11 @@ namespace sts
         predicate<T>{ "\x1BH" },
         /* clear tab */
         predicate<T>{ "\x1B\\[3?g" },
+        /* keyboard transit mode */
+        predicate<T>{ "\x1B\\[\\?1l\x1B\\>" },
+        predicate<T>{ "\x1B\\[\\?1h\x1B\\=" },
+        /* title */
+        predicate<T>{ "\x1B\\]0;.*\x07" },
         /* [re]set mode */
         predicate<T>{ "\x1B\\[=([[:digit:]]){0,2}(h|l)" }
       ));
