@@ -4,7 +4,7 @@
 sts \- simple terminal scroller
 .SH SYNOPSIS
 .PP
-\fB\fCsts\fR [\fB\fC\-u\fR] [\fB\fC\-l\fR \fIbuf_limit\fP]
+\fB\fCsts\fR [\fB\fC\-u\fR] [\fB\fC\-l\fR \fIbuf_limit\fP] [\fB\fC\-s\fR \fIlines\fP]
 .SH DESCRIPTION
 .PP
 \fB\fCsts\fR is a pseudo terminal scroller for the simple terminal 
@@ -20,16 +20,21 @@ Enable unlimited backlog lines (\fB\fCdefault\fR). (same as \fB\fC\-l 0\fR)
 \fB\fC\-l\fR \fIbuf_limit\fP, \fB\fC\-\-limit\fR \fIbuf_limit\fP
 Specify the number of lines \fIbeyond the screen\fP \fB\fCsts\fR should remember for scrolling. Default is 0, meaning there is no limit. (see \fB\fC\-u\fR)
 .TP
+\fB\fC\-s\fR \fIlines\fP, \fB\fC\-\-step\fR \fIlines\fP
+Specify the number of lines each scroll step should take. Default is 5.
+.TP
 \fB\fC\-v\fR, \fB\fC\-\-version\fR
 Show the version information and exit.
 .SH BUGS
 .PP
 Bugs, issues, and feature requests should be sent to the issue tracker on Github: 
-\[la]https://github.com/jeaye/sts/issues\[ra]\&.
+.UR https://github.com/jeaye/sts/issues
+.UE \&.
 .SH AUTHOR
 .PP
 Jeaye 
-\[la]contact@jeaye.com\[ra]
+.MT contact@jeaye.com
+.ME
 .SH LICENSE
 .PP
 \fB\fCsts\fR is under the MIT license. See the \fILICENSE\fP file.

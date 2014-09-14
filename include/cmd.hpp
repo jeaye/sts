@@ -12,7 +12,7 @@ namespace sts
     {
       std::string name;
       std::size_t limit{};
-      std::size_t scroll{ 5 };
+      std::size_t step{ 5 };
     };
 
     struct help_request
@@ -48,6 +48,16 @@ namespace sts
             sum.limit = limit;
             ++i;
           }
+          else if(arg == "-s" || arg == "--step")
+          {
+            if(i + 1 == argc)
+            { throw std::invalid_argument{ "invalid step specifier; use " + arg + " lines" }; }
+            auto const step(std::stoll(argv[i + 1]));
+            if(step < 1)
+            { throw std::invalid_argument{ "invalid step; must be > 0" }; }
+            sum.step = step;
+            ++i;
+          }
           else if(arg == "-v" || arg == "--version")
           { throw version_request{ sum.name }; }
           else
@@ -71,7 +81,9 @@ namespace sts
       << "options:\n"
       << "  -h,  --help                         Show this help message and exit\n"
       << "  -u,  --unlimited                    [default] Enable unlimited backlog\n"
-      << "  -l buf_limit, --limit buf_limit     [default = 0] Specify backlog limit in lines\n" ;
+      << "  -l buf_limit, --limit buf_limit     [default = 0] Specify backlog limit in lines\n"
+      << "  -s lines, --step lines              [default = 5] Specify scroll step in lines"
+      << std::endl;
       std::exit(0);
     }
 

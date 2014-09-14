@@ -7,7 +7,7 @@ sts - simple terminal scroller
 
 SYNOPSIS
 --------
-`sts` [`-u`] [`-l` *buf_limit*]
+`sts` [`-u`] [`-l` *buf_limit*] [`-s` *lines*]
 
 DESCRIPTION
 -----------
@@ -23,6 +23,9 @@ OPTIONS
 
 `-l` *buf_limit*, `--limit` *buf_limit*
   Specify the number of lines _beyond the screen_ `sts` should remember for scrolling. Default is 0, meaning there is no limit. (see `-u`)
+
+`-s` *lines*, `--step` *lines*
+  Specify the number of lines each scroll step should take. Default is 5.
 
 `-v`, `--version`
   Show the version information and exit.
