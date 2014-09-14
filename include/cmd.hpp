@@ -12,6 +12,7 @@ namespace sts
     {
       std::string name;
       std::size_t limit{};
+      std::size_t scroll{ 5 };
     };
 
     struct help_request

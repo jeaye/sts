@@ -10,8 +10,9 @@ namespace sts
   {
     public:
       scroller() = delete;
-      scroller(backlog &bl)
+      scroller(backlog &bl, std::size_t const step)
         : backlog_{ bl }
+        , step_{ step }
       { }
 
       template <typename It>
@@ -35,8 +36,9 @@ namespace sts
       {
         if(!scroll_pos_)
         { return; }
+
         following_ = false;
-        --scroll_pos_;
+        scroll_pos_ -= std::min(step_, scroll_pos_);
         redraw();
       }
 
@@ -48,7 +50,12 @@ namespace sts
           following_ = true;
           return;
         }
-        ++scroll_pos_;
+        ssize_t const diff
+        {
+          static_cast<ssize_t>(scroll_pos_ + impl.tty_.get().size.ws_row) -
+          static_cast<ssize_t>(impl.line_markers_.size())
+        };
+        scroll_pos_ += std::min(step_, static_cast<std::size_t>(std::abs(diff)));
         redraw();
       }
 
@@ -98,6 +105,7 @@ namespace sts
 
       backlog &backlog_;
       std::size_t scroll_pos_{};
+      std::size_t const step_{};
       bool following_{ true };
   };
 }

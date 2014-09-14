@@ -29,7 +29,7 @@ try
 
   /* Parent: relay data between terminal and pty master */
   sts::backlog backlog{ tty, summary.limit };
-  sts::scroller scroller{ backlog };
+  sts::scroller scroller{ backlog, summary.scroll };
   scroller.clear();
 
   /* Place terminal in raw mode so that we can pass all terminal
