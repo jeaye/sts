@@ -35,7 +35,7 @@ namespace sts
         /* smcup */
         predicate<T>
         {
-          "\x1B\\[\\?47h",
+          "\x1B\\[\\?(47|1049)h",
           [](T &self)
           {
             self.backlog_.impls_.emplace_back(self.backlog_.tty_,
@@ -45,7 +45,7 @@ namespace sts
         /* rmcup */
         predicate<T>
         {
-          "\x1B\\[\\?47l",
+          "\x1B\\[\\?(47|1049)l",
           [](T &self)
           {
             if(self.backlog_.impls_.size() > 1)
@@ -57,7 +57,7 @@ namespace sts
         /* move cursor/scroll */
         predicate<T>{ "\x1B\\[([[:digit:]]){0,3}(A|B|C|D|E|F|G|J|K|S|T)" },
         /* move cursor */
-        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};([[:digit:]]){0,3}(H|f)" },
+        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};?([[:digit:]]){0,3}(H|f)" },
         /* report device */
         predicate<T>{ "\x1B\\[[[:digit:]]n" },
         /* save/restore cursor */
@@ -65,9 +65,10 @@ namespace sts
         /* save/restore cursor attributes */
         predicate<T>{ "\x1B(7|8)" },
         /* show/hide cursor */
+        predicate<T>{ "\x1B\\[\\?12l" },
         predicate<T>{ "\x1B\\[\\?25(h|l)" },
         /* scroll screen */
-        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};([[:digit:]]){0,3}r" },
+        predicate<T>{ "\x1B\\[([[:digit:]]){0,3};?([[:digit:]]){0,3}r" },
         /* scroll down/up */
         predicate<T>{ "\x1B(D|M)" },
         /* set tab */
