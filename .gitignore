@@ -10,3 +10,6 @@ bin/
 
 # Object files
 *.cpp.o
+
+# Local notes
+NOTES
