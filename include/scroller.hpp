@@ -19,7 +19,7 @@ namespace sts
       void write(It const &begin, It end)
       {
         auto const size(std::distance(begin, end));
-        if(::write(STDOUT_FILENO, &*begin, size) != size)
+        if(following_ && ::write(STDOUT_FILENO, &*begin, size) != size)
         { throw std::runtime_error{ "partial/failed write (stdout)" }; }
 
         end = detail::filter(*this, begin, end);
