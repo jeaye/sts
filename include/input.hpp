@@ -32,9 +32,8 @@ namespace sts
             consumed = true;
             break;
           case event::carriage_return:
-            scroller.follow();
-            break;
           default:
+            scroller.follow();
             break;
         }
       }
