@@ -20,7 +20,8 @@ namespace sts
         resource(resource const&) = delete;
         resource(resource &&) = default;
         resource(T &&t, dtor_t const &dtor) 
-          : data_(std::move(t)), dtor_{ dtor }
+          : data_(std::move(t))
+          , dtor_{ dtor }
         { }
         ~resource()
         { dtor_(data_); }

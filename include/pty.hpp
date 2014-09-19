@@ -20,7 +20,8 @@ namespace sts
 
       pty() = delete;
       pty(tty const &state)
-        : tty_{ state }, master_{ posix_openpt(O_RDWR | O_NOCTTY), &close }
+        : tty_{ state }
+        , master_{ posix_openpt(O_RDWR | O_NOCTTY), &close }
       {
         if(master_.get() == -1)
         { throw error{ "failed to open pty" }; }
