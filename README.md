@@ -9,7 +9,7 @@ $ st -e sts
 ```
 
 ### Installation
-Compilation requires a modern GCC (4.9+) or clang (3.4+).
+Compilation requires a modern GCC (4.9+) or clang (3.4+). Build options can be configured in `config.mk`.
 ```bash
 # assuming appropriate permissions
 $ make install
