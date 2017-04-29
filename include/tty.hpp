@@ -55,7 +55,7 @@ namespace sts
       if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw_term) == -1)
       { throw tty::error{ "failed to enter raw mode" }; }
     }
-    ~raw_mode()
+    ~raw_mode() noexcept(false)
     {
       if(tcsetattr(STDIN_FILENO, TCSANOW, &tty_.term) == -1)
       { throw tty::error{ "failed to reset terminal" }; }
